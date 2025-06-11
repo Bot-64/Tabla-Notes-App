@@ -3,6 +3,14 @@ import Header from "./components/Header";
 import NoteForm from "./components/NoteForm";
 import NoteList from "./components/NoteList";
 
+// Helper: fetch with timeout
+function fetchWithTimeout(resource, options = {}, timeout = 40000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  return fetch(resource, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(id));
+}
+
 export default function App() {
   const [notes, setNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
@@ -17,6 +25,8 @@ export default function App() {
     structure: "",
   });
   const [showNewNote, setShowNewNote] = useState(true);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Helper: serialize split fields for backend
   function serializeNote(note) {
@@ -55,8 +65,13 @@ export default function App() {
 
   // Fetch notes from the backend
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/notes")
-      .then((response) => response.json())
+    setError("");
+    setLoading(true);
+    fetchWithTimeout("https://flask-backend-2tg6.onrender.com/notes")
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to fetch notes");
+        return response.json();
+      })
       .then((data) => {
         const parsedNotes = data.map(parseNote);
         setNotes(parsedNotes);
@@ -64,8 +79,16 @@ export default function App() {
         // Extract unique taals from the notes
         const uniqueTaals = [...new Set(parsedNotes.map((note) => note.taal))];
         setTaals(uniqueTaals);
+        setLoading(false);
       })
-      .catch((error) => console.error("Error fetching notes:", error));
+      .catch((error) => {
+        if (error.name === "AbortError") {
+          setError("Request timed out. Please try again later.");
+        } else {
+          setError("Error fetching notes: " + error.message);
+        }
+        setLoading(false);
+      });
   }, []);
 
   // Handle filtering notes by taal
@@ -80,16 +103,25 @@ export default function App() {
 
   // Handle deleting a note
   const handleDeleteNote = (id) => {
-    fetch(`http://127.0.0.1:5000/notes/${id}`, {
+    setError("");
+    fetchWithTimeout(`https://flask-backend-2tg6.onrender.com/notes/${id}`, {
       method: "DELETE",
     })
       .then((response) => {
         if (response.ok) {
           setNotes((prev) => prev.filter((note) => note.id !== id));
           setFilteredNotes((prev) => prev.filter((note) => note.id !== id));
+        } else {
+          throw new Error("Failed to delete note");
         }
       })
-      .catch((error) => console.error("Error deleting note:", error));
+      .catch((error) => {
+        if (error.name === "AbortError") {
+          setError("Delete request timed out. Please try again.");
+        } else {
+          setError("Error deleting note: " + error.message);
+        }
+      });
   };
 
   // Handle editing a note
@@ -110,8 +142,9 @@ export default function App() {
 
   // Handle saving the edited note
   const handleSaveEdit = () => {
+    setError("");
     const noteToSend = serializeNote(editedNote);
-    fetch(`http://127.0.0.1:5000/notes/${editingNoteId}`, {
+    fetchWithTimeout(`https://flask-backend-2tg6.onrender.com/notes/${editingNoteId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -137,14 +170,21 @@ export default function App() {
         setEditingNoteId(null);
         setShowNewNote(true); // Show new note form again
       })
-      .catch((error) => console.error("Error updating note:", error));
+      .catch((error) => {
+        if (error.name === "AbortError") {
+          setError("Update request timed out. Please try again.");
+        } else {
+          setError("Error updating note: " + error.message);
+        }
+      });
   };
 
   // Handle adding a new note
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    setError("");
     const noteToSend = serializeNote(newNote);
-    fetch("http://127.0.0.1:5000/notes", {
+    fetchWithTimeout("https://flask-backend-2tg6.onrender.com/notes", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -172,7 +212,13 @@ export default function App() {
         }
         setNewNote({ title: "", content: "", taal: "", structure: "" });
       })
-      .catch((error) => console.error("Error adding note:", error));
+      .catch((error) => {
+        if (error.name === "AbortError") {
+          setError("Add request timed out. Please try again.");
+        } else {
+          setError("Error adding note: " + error.message);
+        }
+      });
   };
 
   // Handle input changes for the new note
@@ -186,6 +232,16 @@ export default function App() {
       `min-h-screen w-screen h-screen transition-colors duration-300 ` +
       'bg-neutral-100 text-neutral-900'
     }>
+      {error && (
+        <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-lg border border-red-300 text-center">
+          {error}
+        </div>
+      )}
+      {loading && !error && (
+        <div className="bg-blue-100 text-blue-700 p-4 mb-4 rounded-lg border border-blue-300 text-center">
+          Loading notes...
+        </div>
+      )}
       <Header
         taals={taals}
         selectedTaal={selectedTaal}
