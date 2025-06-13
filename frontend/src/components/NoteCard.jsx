@@ -135,59 +135,63 @@ export default function NoteCard({
       </div>
     );
   }
+
+  // View mode
   return (
-    <div className="glassmorphic shadow-xl rounded-2xl p-4 hover:shadow-2xl transition-all duration-300">
-      <h3 className="text-lg font-bold mb-1 text-neutral-900 drop-shadow-lg">{note.title}</h3>
-      {(["peshkar", "kaida", "rela"].includes(note.structure)) ? (
-        <div className="mb-2">
-          <div className="text-sm text-neutral-700 font-semibold mb-1">Main Contents</div>
-          <div className="text-sm text-neutral-800 whitespace-pre-line mb-2">{note.main}</div>
-          <div className="text-sm text-neutral-700 font-semibold mb-1">Bals</div>
-          {note.bals && note.bals.length > 0 && (
-            <ol className="list-decimal list-inside text-sm text-neutral-800 mb-2">
-              {note.bals.map((bal, idx) => (
-                <li key={idx}>{bal}</li>
-              ))}
+    <div className="glassmorphic card-bg rounded-2xl shadow-xl p-8 mb-4 border border-neutral-200 transition-all duration-300">
+      <h2 className="text-2xl font-bold text-neutral-900 mb-2 tracking-tight drop-shadow-sm">{note.title}</h2>
+      <div className="flex gap-6 mb-4 text-base text-neutral-800 font-medium">
+        <span><span className="font-semibold">Taal:</span> {note.taal}</span>
+        <span><span className="font-semibold">Structure:</span> {note.structure.charAt(0).toUpperCase() + note.structure.slice(1)}</span>
+      </div>
+      <div className="bg-white/70 rounded-xl border border-neutral-200 p-4 mb-6 font-mono text-base whitespace-pre-wrap text-neutral-900 shadow-sm">
+        {note.main || note.content}
+        {Array.isArray(note.bals) && note.bals.length > 0 && (
+          <>
+            <br />
+            <span className="font-semibold">Bals:</span>
+            <ol className="list-decimal ml-6 mt-1">
+              {note.bals.map((bal, idx) => {
+                const lines = bal.split('\n');
+                return (
+                  <li key={idx} className="pl-0 list-inside whitespace-pre-line">
+                    {lines.map((line, i) => (
+                      <div key={i} style={i === 0 ? {} : { paddingLeft: '2em' }}>{line}</div>
+                    ))}
+                  </li>
+                );
+              })}
             </ol>
-          )}
-          {note.tehai && (
-            <>
-              <div className="text-sm text-neutral-700 font-semibold mb-1">Tehai</div>
-              <div className="text-sm text-neutral-800 whitespace-pre-line">{note.tehai}</div>
-            </>
-          )}
+          </>
+        )}
+        {note.tehai && (
+          <>
+            <br />
+            <span className="font-semibold">Tehai:</span>
+            <br />
+            {note.tehai}
+          </>
+        )}
+      </div>
+      <div className="flex items-center justify-between mt-2">
+        <span className="text-neutral-500 text-sm font-semibold">
+          Date Modified: {note.date_modified && new Date(note.date_modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+        </span>
+        <div className="flex gap-2">
+          <button
+            className="border border-neutral-300 bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-neutral-100 transition shadow-sm"
+            onClick={() => handleEditClick(note)}
+          >
+            Edit
+          </button>
+          <button
+            className="border border-neutral-300 bg-white text-neutral-700 px-6 py-2 rounded-lg font-semibold hover:bg-neutral-100 transition shadow-sm"
+            onClick={() => handleDeleteNote(note.id)}
+          >
+            Delete
+          </button>
         </div>
-      ) : (
-        <p className="text-sm text-neutral-800">{note.content}</p>
-      )}
-      <p className="text-sm text-neutral-800">
-        <strong>Taal:</strong> {note.taal}
-      </p>
-      <p className="text-sm text-neutral-800">
-        <strong>Structure:</strong> {note.structure.charAt(0).toUpperCase() + note.structure.slice(1)}
-      </p>
-      <p className="text-sm text-neutral-500">
-        <strong>Date Modified:</strong>{" "}
-        {note.date_modified
-          ? new Date(note.date_modified).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
-          : ""}
-      </p>
-      <button
-        onClick={() => handleEditClick(note)}
-        className="px-4 py-2 bg-blue-600 text-black rounded mr-2"
-      >
-        Edit
-      </button>
-      <button
-        onClick={() => handleDeleteNote(note.id)}
-        className="px-4 py-2 bg-red-600 text-black rounded"
-      >
-        Delete
-      </button>
+      </div>
     </div>
   );
 }

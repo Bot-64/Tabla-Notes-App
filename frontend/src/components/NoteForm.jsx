@@ -85,7 +85,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
     <section className="col-span-4 mb-6">
       <form
         onSubmit={handleFormSubmit}
-        className="bg-white/60 backdrop-blur-md border border-white/20 shadow-xl p-6 rounded-2xl transition-colors duration-300"
+        className="bg-white/60 backdrop-blur-md border border-neutral-200 shadow-xl p-6 rounded-2xl transition-colors duration-300"
       >
         <h2 className="text-lg font-bold mb-4 drop-shadow-lg text-neutral-900">{isEditing ? "Editing Note" : "Add New Note"}</h2>
         <div className="grid grid-cols-2 gap-4">
@@ -95,7 +95,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
             value={newNote.title}
             onChange={handleInputChange}
             placeholder="Title"
-            className="p-2 rounded border focus:ring-2 focus:ring-blue-500 transition-all bg-white text-neutral-900 border-neutral-300"
+            className="p-2 rounded border focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
             required
           />
           <input
@@ -104,7 +104,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
             value={newNote.taal}
             onChange={handleInputChange}
             placeholder="Taal"
-            className="p-2 rounded border focus:ring-2 focus:ring-blue-500 transition-all bg-white text-neutral-900 border-neutral-300"
+            className="p-2 rounded border focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
           />
           {/* Structure Dropdown */}
           <div className="relative w-full">
@@ -112,7 +112,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
               name="structure"
               value={newNote.structure}
               onChange={handleStructureChange}
-              className="appearance-none rounded-lg px-5 py-2 pr-10 border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all w-full capitalize bg-white text-neutral-900 border-neutral-300"
+              className="appearance-none rounded-lg px-5 py-2 pr-10 border focus:outline-none focus:ring-2 focus:ring-neutral-800 transition-all w-full capitalize bg-white text-neutral-900 border-neutral-300"
               required
             >
               <option value="">Select Structure</option>
@@ -144,7 +144,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                 }}
                 onKeyDown={e => handleShiftInsert(e, newNote.main || "", handleMainChange)}
                 placeholder="Main"
-                className="p-2 rounded border mb-2 focus:ring-2 focus:ring-blue-500 transition-all bg-white text-neutral-900 border-neutral-300"
+                className="p-2 rounded border mb-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required
               />
               {/* Bals List */}
@@ -159,12 +159,12 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                     }}
                     onKeyDown={e => handleShiftInsert(e, bal, ev => handleBalChange(idx, ev))}
                     placeholder={`Bal ${idx + 1}`}
-                    className="p-2 rounded border w-full h-24 focus:ring-2 focus:ring-blue-500 transition-all bg-white text-neutral-900 border-neutral-300"
+                    className="p-2 rounded border w-full h-24 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                   />
                   <button
                     type="button"
                     onClick={() => handleDeleteBal(idx)}
-                    className="px-2 py-1 bg-red-600 text-black rounded"
+                    className="px-2 py-1 bg-neutral-200 text-black rounded"
                   >
                     Delete
                   </button>
@@ -179,20 +179,20 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                 }}
                 onKeyDown={e => handleShiftInsert(e, newNote.tehai || "", handleTehaiChange)}
                 placeholder="Tehai"
-                className="p-2 rounded border mb-2 focus:ring-2 focus:ring-blue-500 transition-all bg-white text-neutral-900 border-neutral-300"
+                className="p-2 rounded border mb-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required
               />
               <div className="flex gap-2 mt-2">
                 <button
                   type="button"
                   onClick={handleAddBal}
-                  className="px-4 py-2 bg-blue-700 text-black rounded w-fit"
+                  className="px-4 py-2 bg-neutral-900 text-black rounded w-fit hover:bg-neutral-800 transition"
                 >
                   Add Bal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-black rounded"
+                  className="px-4 py-2 bg-neutral-900 text-black rounded hover:bg-neutral-800 transition"
                 >
                   {isEditing ? "Save Note" : "Add Note"}
                 </button>
@@ -209,7 +209,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                 }}
                 onKeyDown={e => handleShiftInsert(e, newNote.content, handleInputChange)}
                 placeholder="Content"
-                className="p-2 rounded border col-span-2 focus:ring-2 focus:ring-blue-500 transition-all bg-white text-neutral-900 border-neutral-300"
+                className="p-2 rounded border col-span-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required
               />
             </>
@@ -220,7 +220,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
           <div className="flex gap-2 mt-4">
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-black rounded"
+              className="px-4 py-2 bg-neutral-900 text-black rounded hover:bg-neutral-800 transition"
             >
               {isEditing ? "Save Note" : "Add Note"}
             </button>
