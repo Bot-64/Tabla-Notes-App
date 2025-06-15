@@ -43,7 +43,7 @@ export default function Header({ taals, selectedTaal, handleFilterChange, user, 
           <div className="flex items-center gap-2 ml-4">
             <span className="text-neutral-700 text-sm">Logged in as <b>{user.username}</b></span>
             <button
-              className="px-3 py-1 bg-neutral-900 text-white rounded-lg font-semibold hover:bg-neutral-800 transition border border-neutral-700 text-sm"
+              className="px-3 py-1 bg-neutral-900 text-black rounded-lg font-semibold hover:bg-neutral-800 transition border border-neutral-700 text-sm"
               onClick={onLogoutClick}
             >
               Logout
@@ -52,7 +52,7 @@ export default function Header({ taals, selectedTaal, handleFilterChange, user, 
         ) : (
           <div className="flex items-center gap-2 ml-4">
             <button
-              className="px-3 py-1 bg-neutral-900 text-white rounded-lg font-semibold hover:bg-neutral-800 transition border border-neutral-700 text-sm"
+              className="px-3 py-1 bg-neutral-900 text-black rounded-lg font-semibold hover:bg-neutral-800 transition border border-neutral-700 text-sm"
               onClick={onLoginClick}
             >
               Login

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "./components/Header";
 import NoteForm from "./components/NoteForm";
 import NoteList from "./components/NoteList";
+import Auth from "./components/Auth";
 
 // Helper: fetch with timeout
 function fetchWithTimeout(resource, options = {}, timeout = 40000) {
@@ -33,9 +34,6 @@ export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem("jwt") || "");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login"); // or "register"
-  const [authForm, setAuthForm] = useState({ username: "", password: "" });
-  const [authError, setAuthError] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
 
   // Helper: serialize split fields for backend
   function serializeNote(note) {
@@ -75,81 +73,55 @@ export default function App() {
   // --- Auth logic ---
   useEffect(() => {
     if (token) {
-      // Optionally decode token for username, or fetch user info
-      setUser({ username: authForm.username });
+      setUser({ username: user?.username || "" });
       localStorage.setItem("jwt", token);
+      // Fetch notes from the backend
+      setError("");
+      setLoading(true);
+      const fetchNotes = () => {
+        const url = token
+          ? "https://flask-backend-2tg6.onrender.com/notes" // Authenticated: should return only user's notes
+          : "https://flask-backend-2tg6.onrender.com/notes"; // Public: all notes (if allowed)
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        fetchWithTimeout(url, { headers })
+          .then((response) => {
+            if (!response.ok) throw new Error("Failed to fetch notes");
+            return response.json();
+          })
+          .then((data) => {
+            const parsedNotes = data.map(parseNote);
+            setNotes(parsedNotes);
+            setFilteredNotes(parsedNotes);
+            // Extract unique taals from the notes
+            const uniqueTaals = [...new Set(parsedNotes.map((note) => note.taal))];
+            setTaals(uniqueTaals);
+            setLoading(false);
+          })
+          .catch((error) => {
+            if (error.name === "AbortError") {
+              setError("Request timed out. Please try again later.");
+            } else {
+              setError("Error fetching notes: " + error.message);
+            }
+            setLoading(false);
+          });
+      };
+      fetchNotes();
+      // Re-fetch notes when token changes (login/logout)
     } else {
       setUser(null);
       localStorage.removeItem("jwt");
+      setNotes([]);
+      setFilteredNotes([]);
+      setTaals([]);
     }
   }, [token]);
-
-  const handleAuthInputChange = (e) => {
-    const { name, value } = e.target;
-    setAuthForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAuthSubmit = (e) => {
-    e.preventDefault();
-    setAuthError("");
-    setAuthLoading(true);
-    const endpoint =
-      authMode === "login"
-        ? "https://flask-backend-2tg6.onrender.com/login"
-        : "https://flask-backend-2tg6.onrender.com/register";
-    fetchWithTimeout(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(authForm),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.token) {
-          setToken(data.token);
-          setUser({ username: authForm.username });
-          setShowAuthModal(false);
-          setAuthForm({ username: "", password: "" });
-        } else {
-          throw new Error(data.message || "Authentication failed");
-        }
-      })
-      .catch((err) => setAuthError(err.message))
-      .finally(() => setAuthLoading(false));
-  };
 
   const handleLogout = () => {
     setToken("");
     setUser(null);
     localStorage.removeItem("jwt");
   };
-
-  // Fetch notes from the backend
-  useEffect(() => {
-    setError("");
-    setLoading(true);
-    fetchWithTimeout("https://flask-backend-2tg6.onrender.com/notes")
-      .then((response) => {
-        if (!response.ok) throw new Error("Failed to fetch notes");
-        return response.json();
-      })
-      .then((data) => {
-        const parsedNotes = data.map(parseNote);
-        setNotes(parsedNotes);
-        setFilteredNotes(parsedNotes);
-        // Extract unique taals from the notes
-        const uniqueTaals = [...new Set(parsedNotes.map((note) => note.taal))];
-        setTaals(uniqueTaals);
-        setLoading(false);
-      })
-      .catch((error) => {
-        if (error.name === "AbortError") {
-          setError("Request timed out. Please try again later.");
-        } else {
-          setError("Error fetching notes: " + error.message);
-        }
-        setLoading(false);
-      });
-  }, []);
 
   // Handle filtering notes by taal
   const handleFilterChange = (taal) => {
@@ -305,64 +277,18 @@ export default function App() {
           Loading notes...
         </div>
       )}
-      {/* --- Auth Modal --- */}
-      {showAuthModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-xs border border-neutral-200">
-            <h2 className="text-xl font-bold mb-4 text-center">
-              {authMode === "login" ? "Login" : "Register"}
-            </h2>
-            <form onSubmit={handleAuthSubmit}>
-              <input
-                className="w-full mb-3 p-2 rounded bg-neutral-100 border border-neutral-300 focus:outline-none"
-                type="text"
-                name="username"
-                placeholder="Username"
-                value={authForm.username}
-                onChange={handleAuthInputChange}
-                required
-                autoFocus
-              />
-              <input
-                className="w-full mb-3 p-2 rounded bg-neutral-100 border border-neutral-300 focus:outline-none"
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={authForm.password}
-                onChange={handleAuthInputChange}
-                required
-              />
-              {authError && (
-                <div className="text-red-600 text-sm mb-2 text-center">{authError}</div>
-              )}
-              <button
-                className="w-full py-2 rounded bg-neutral-900 text-white font-semibold hover:bg-neutral-800 transition mb-2"
-                type="submit"
-                disabled={authLoading}
-              >
-                {authLoading ? "Loading..." : authMode === "login" ? "Login" : "Register"}
-              </button>
-            </form>
-            <div className="text-center mt-2">
-              <button
-                className="text-neutral-500 hover:underline text-sm"
-                onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}
-              >
-                {authMode === "login"
-                  ? "Don't have an account? Register"
-                  : "Already have an account? Login"}
-              </button>
-            </div>
-            <button
-              className="absolute top-2 right-2 text-neutral-400 hover:text-neutral-700"
-              onClick={() => setShowAuthModal(false)}
-              aria-label="Close auth modal"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+      {/* --- Auth Modal (modular) --- */}
+      <Auth
+        show={showAuthModal}
+        mode={authMode}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={(data) => {
+          setToken(data.token);
+          setUser({ username: data.username });
+          setShowAuthModal(false);
+          // Notes will auto-refetch due to [token] dependency
+        }}
+      />
       <Header
         taals={taals}
         selectedTaal={selectedTaal}

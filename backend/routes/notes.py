@@ -33,28 +33,33 @@ def add_note():
     data = request.json
     conn = get_connection()
     c = conn.cursor()
-    c.execute(
-        "INSERT INTO notes (title, content, taal, structure, date_modified, user_id) VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, %s) RETURNING id",
-        (data["title"], data["content"], data.get("taal"), data.get("structure"), user_id)
-    )
-    note_id = c.fetchone()[0]
-    conn.commit()
-    c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE id = %s", (note_id,))
-    row = c.fetchone()
-    c.close()
-    conn.close()
-    if row:
-        note = {
-            "id": row[0],
-            "title": row[1],
-            "content": row[2],
-            "taal": row[3],
-            "structure": row[4],
-            "date_modified": row[5],
-        }
-        return jsonify(note), 201
-    else:
-        return jsonify({"error": "Note not found after insert"}), 500
+    try:
+        c.execute(
+            "INSERT INTO notes (title, content, taal, structure, date_modified, user_id) VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, %s) RETURNING id",
+            (data["title"], data["content"], data.get("taal"), data.get("structure"), user_id)
+        )
+        note_id = c.fetchone()[0]
+        conn.commit()
+        c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE id = %s", (note_id,))
+        row = c.fetchone()
+        if row:
+            note = {
+                "id": row[0],
+                "title": row[1],
+                "content": row[2],
+                "taal": row[3],
+                "structure": row[4],
+                "date_modified": row[5],
+            }
+            return jsonify(note), 201
+        else:
+            return jsonify({"error": "Note not found after insert"}), 500
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": f"Failed to add note: {str(e)}"}), 500
+    finally:
+        c.close()
+        conn.close()
 
 @notes_bp.route("/notes/<int:id>", methods=["DELETE"])
 def delete_note(id):
