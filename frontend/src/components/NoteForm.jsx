@@ -19,19 +19,27 @@ function capitalizeWords(text) {
   return text.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-// Helper: handle Shift key to insert ' | '
-function handleShiftInsert(e, value, onChange) {
-  if (e.key === 'Shift') {
+// Helper: handle Control key or double space to insert ' | '
+function handleControlOrDoubleSpaceInsert(e, value, onChange) {
+  // Control key (for Mac)
+  if (e.key === 'Control') {
     e.preventDefault();
-    const textarea = e.target;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const newValue = value.slice(0, start) + '| ' + value.slice(end);
-    // Move cursor after inserted ' | '
+    const cursor = e.target.selectionStart;
+    const newValue = value.slice(0, cursor) + '| ' + value.slice(cursor);
+    onChange({ target: { name: e.target.name, value: newValue } });
     setTimeout(() => {
-      textarea.selectionStart = textarea.selectionEnd = start + 3;
+      e.target.selectionStart = e.target.selectionEnd = cursor + 3;
     }, 0);
-    onChange({ target: { name: textarea.name, value: newValue } });
+  }
+  // Double space
+  else if (e.key === ' ' && value[e.target.selectionStart - 1] === ' ') {
+    e.preventDefault();
+    const cursor = e.target.selectionStart;
+    const newValue = value.slice(0, cursor - 1) + ' | ' + value.slice(cursor);
+    onChange({ target: { name: e.target.name, value: newValue } });
+    setTimeout(() => {
+      e.target.selectionStart = e.target.selectionEnd = cursor + 2;
+    }, 0);
   }
 }
 
@@ -142,7 +150,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                   const value = capitalizeWords(e.target.value);
                   handleMainChange({ target: { name: "main", value } });
                 }}
-                onKeyDown={e => handleShiftInsert(e, newNote.main || "", handleMainChange)}
+                onKeyDown={e => handleControlOrDoubleSpaceInsert(e, newNote.main || "", handleMainChange)}
                 placeholder="Main"
                 className="p-2 rounded border mb-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required
@@ -157,7 +165,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                       const value = capitalizeWords(e.target.value);
                       handleBalChange(idx, { target: { name: `bal${idx}`, value } });
                     }}
-                    onKeyDown={e => handleShiftInsert(e, bal, ev => handleBalChange(idx, ev))}
+                    onKeyDown={e => handleControlOrDoubleSpaceInsert(e, bal, ev => handleBalChange(idx, ev))}
                     placeholder={`Bal ${idx + 1}`}
                     className="p-2 rounded border w-full h-24 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                   />
@@ -177,7 +185,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                   const value = capitalizeWords(e.target.value);
                   handleTehaiChange({ target: { name: "tehai", value } });
                 }}
-                onKeyDown={e => handleShiftInsert(e, newNote.tehai || "", handleTehaiChange)}
+                onKeyDown={e => handleControlOrDoubleSpaceInsert(e, newNote.tehai || "", handleTehaiChange)}
                 placeholder="Tehai"
                 className="p-2 rounded border mb-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required
@@ -207,7 +215,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                   const value = capitalizeWords(e.target.value);
                   handleInputChange({ target: { name: "content", value } });
                 }}
-                onKeyDown={e => handleShiftInsert(e, newNote.content, handleInputChange)}
+                onKeyDown={e => handleControlOrDoubleSpaceInsert(e, newNote.content, handleInputChange)}
                 placeholder="Content"
                 className="p-2 rounded border col-span-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required
