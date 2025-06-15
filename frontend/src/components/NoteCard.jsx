@@ -9,6 +9,7 @@ export default function NoteCard({
   handleSaveEdit,
   handleDeleteNote,
   setEditingNoteId,
+  isReadOnly = false,
 }) {
   if (editingNoteId === note.id) {
     const isSplitStructure = ["peshkar", "kaida", "rela"].includes(editedNote.structure);
@@ -21,6 +22,7 @@ export default function NoteCard({
           value={editedNote.title || ""}
           onChange={handleEditInputChange}
           className="p-2 rounded bg-white text-neutral-900 w-full mb-2"
+          disabled={isReadOnly}
         />
         {isSplitStructure ? (
           <>
@@ -31,25 +33,28 @@ export default function NoteCard({
               value={editedNote.main || ""}
               onChange={handleEditInputChange}
               className="p-2 rounded bg-white text-neutral-900 w-full mb-2"
+              disabled={isReadOnly}
             />
             {/* Bals fields */}
             <div className="mb-2">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm text-neutral-700 font-semibold">Bals</span>
-                <button
-                  type="button"
-                  className="px-2 py-1 bg-blue-600 text-black rounded text-xs"
-                  onClick={() => {
-                    const bals = editedNote.bals ? [...editedNote.bals] : [];
-                    bals.push("");
-                    handleEditInputChange({
-                      target: { name: "bals", value: bals },
-                      isBal: true,
-                    });
-                  }}
-                >
-                  + Add Bal
-                </button>
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    className="px-2 py-1 bg-blue-600 text-black rounded text-xs"
+                    onClick={() => {
+                      const bals = editedNote.bals ? [...editedNote.bals] : [];
+                      bals.push("");
+                      handleEditInputChange({
+                        target: { name: "bals", value: bals },
+                        isBal: true,
+                      });
+                    }}
+                  >
+                    + Add Bal
+                  </button>
+                )}
               </div>
               {editedNote.bals && editedNote.bals.length > 0 && (
                 <ol className="list-decimal list-inside space-y-1">
@@ -68,22 +73,25 @@ export default function NoteCard({
                         }}
                         className="p-2 rounded bg-white text-neutral-900 w-full mb-1"
                         rows={1}
+                        disabled={isReadOnly}
                       />
-                      <button
-                        type="button"
-                        className="px-2 py-1 bg-red-600 text-black rounded text-xs"
-                        onClick={() => {
-                          const bals = [...editedNote.bals];
-                          bals.splice(idx, 1);
-                          handleEditInputChange({
-                            target: { name: "bals", value: bals },
-                            isBal: true,
-                          });
-                        }}
-                        aria-label="Delete bal"
-                      >
-                        &times;
-                      </button>
+                      {!isReadOnly && (
+                        <button
+                          type="button"
+                          className="px-2 py-1 bg-red-600 text-black rounded text-xs"
+                          onClick={() => {
+                            const bals = [...editedNote.bals];
+                            bals.splice(idx, 1);
+                            handleEditInputChange({
+                              target: { name: "bals", value: bals },
+                              isBal: true,
+                            });
+                          }}
+                          aria-label="Delete bal"
+                        >
+                          &times;
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ol>
@@ -96,6 +104,7 @@ export default function NoteCard({
               value={editedNote.tehai || ""}
               onChange={handleEditInputChange}
               className="p-2 rounded bg-white text-neutral-900 w-full mb-2"
+              disabled={isReadOnly}
             />
           </>
         ) : (
@@ -104,6 +113,7 @@ export default function NoteCard({
             value={editedNote.content || ""}
             onChange={handleEditInputChange}
             className="p-2 rounded bg-white text-neutral-900 w-full mb-2"
+            disabled={isReadOnly}
           />
         )}
         <input
@@ -112,6 +122,7 @@ export default function NoteCard({
           value={editedNote.taal || ""}
           onChange={handleEditInputChange}
           className="p-2 rounded bg-white text-neutral-900 w-full mb-2"
+          disabled={isReadOnly}
         />
         <input
           type="text"
@@ -119,19 +130,24 @@ export default function NoteCard({
           value={editedNote.structure || ""}
           onChange={handleEditInputChange}
           className="p-2 rounded bg-white text-neutral-900 w-full mb-2"
+          disabled={isReadOnly}
         />
-        <button
-          onClick={handleSaveEdit}
-          className="px-4 py-2 bg-green-600 text-black rounded mr-2"
-        >
-          Save Note
-        </button>
-        <button
-          onClick={() => setEditingNoteId(null)}
-          className="px-4 py-2 bg-red-600 text-black rounded"
-        >
-          Cancel
-        </button>
+        {!isReadOnly && (
+          <>
+            <button
+              onClick={handleSaveEdit}
+              className="px-4 py-2 bg-green-600 text-black rounded mr-2"
+            >
+              Save Note
+            </button>
+            <button
+              onClick={() => setEditingNoteId(null)}
+              className="px-4 py-2 bg-red-600 text-black rounded"
+            >
+              Cancel
+            </button>
+          </>
+        )}
       </div>
     );
   }
@@ -177,20 +193,22 @@ export default function NoteCard({
         <span className="text-neutral-500 text-sm font-semibold">
           Date Modified: {note.date_modified && new Date(note.date_modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
         </span>
-        <div className="flex gap-2">
-          <button
-            className="border border-neutral-300 bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-neutral-100 transition shadow-sm"
-            onClick={() => handleEditClick(note)}
-          >
-            Edit
-          </button>
-          <button
-            className="border border-neutral-300 bg-white text-neutral-700 px-6 py-2 rounded-lg font-semibold hover:bg-neutral-100 transition shadow-sm"
-            onClick={() => handleDeleteNote(note.id)}
-          >
-            Delete
-          </button>
-        </div>
+        {!isReadOnly && (
+          <div className="flex gap-2">
+            <button
+              className="border border-neutral-300 bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-neutral-100 transition shadow-sm"
+              onClick={() => handleEditClick(note)}
+            >
+              Edit
+            </button>
+            <button
+              className="border border-neutral-300 bg-white text-neutral-700 px-6 py-2 rounded-lg font-semibold hover:bg-neutral-100 transition shadow-sm"
+              onClick={() => handleDeleteNote(note.id)}
+            >
+              Delete
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

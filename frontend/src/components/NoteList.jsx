@@ -10,6 +10,7 @@ export default function NoteList({
   handleSaveEdit,
   handleDeleteNote,
   setEditingNoteId,
+  isReadOnly = false,
 }) {
   return (
     <section className="col-span-4">
@@ -25,6 +26,7 @@ export default function NoteList({
             handleSaveEdit={handleSaveEdit}
             handleDeleteNote={handleDeleteNote}
             setEditingNoteId={setEditingNoteId}
+            isReadOnly={isReadOnly}
           />
         ))}
       </div>

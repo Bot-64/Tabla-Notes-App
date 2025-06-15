@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import get_connection
+from routes.auth import get_user_id_from_token
 
 # Create a Blueprint for notes
 notes_bp = Blueprint("notes", __name__)
@@ -26,12 +27,15 @@ def get_notes():
 
 @notes_bp.route("/notes", methods=["POST"])
 def add_note():
+    user_id = get_user_id_from_token(request)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
     data = request.json
     conn = get_connection()
     c = conn.cursor()
     c.execute(
-        "INSERT INTO notes (title, content, taal, structure, date_modified) VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP) RETURNING id",
-        (data["title"], data["content"], data.get("taal"), data.get("structure"))
+        "INSERT INTO notes (title, content, taal, structure, date_modified, user_id) VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, %s) RETURNING id",
+        (data["title"], data["content"], data.get("taal"), data.get("structure"), user_id)
     )
     note_id = c.fetchone()[0]
     conn.commit()
@@ -54,9 +58,13 @@ def add_note():
 
 @notes_bp.route("/notes/<int:id>", methods=["DELETE"])
 def delete_note(id):
+    user_id = get_user_id_from_token(request)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
     conn = get_connection()
     c = conn.cursor()
-    c.execute("DELETE FROM notes WHERE id = %s", (id,))
+    # Only delete if the note belongs to the user
+    c.execute("DELETE FROM notes WHERE id = %s AND user_id = %s", (id, user_id))
     conn.commit()
     c.close()
     conn.close()
@@ -64,12 +72,16 @@ def delete_note(id):
 
 @notes_bp.route("/notes/<int:id>", methods=["PUT"])
 def update_note(id):
+    user_id = get_user_id_from_token(request)
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
     data = request.json
     conn = get_connection()
     c = conn.cursor()
+    # Only update if the note belongs to the user
     c.execute(
-        "UPDATE notes SET title = %s, content = %s, taal = %s, structure = %s, date_modified = CURRENT_TIMESTAMP WHERE id = %s",
-        (data["title"], data["content"], data["taal"], data["structure"], id)
+        "UPDATE notes SET title = %s, content = %s, taal = %s, structure = %s, date_modified = CURRENT_TIMESTAMP WHERE id = %s AND user_id = %s",
+        (data["title"], data["content"], data["taal"], data["structure"], id, user_id)
     )
     conn.commit()
     c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE id = %s", (id,))

@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from models import init_db
 from routes.notes import notes_bp  # Import the notes blueprint
+from routes.auth import auth_bp
 import os
 
 app = Flask(__name__)
@@ -12,6 +13,8 @@ init_db()
 
 # Register the notes blueprint
 app.register_blueprint(notes_bp)
+# Register the auth blueprint
+app.register_blueprint(auth_bp)
 
 @app.route("/")
 def home():
@@ -36,8 +39,10 @@ def home():
     <h1>Tabla Notes API</h1>
     <p>Backend is running!</p>
     <p>Try <a href='/notes'>/notes</a> to see stored compositions.</p>
+    <p>Try <a href='/users'>/users</a> to see all users.</p>
     <p><b>Database size:</b> {size_str}</p>
     """
+
 
 if __name__ == "__main__":
     app.run(debug=True)

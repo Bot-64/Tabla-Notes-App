@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function Header({ taals, selectedTaal, handleFilterChange }) {
+export default function Header({ taals, selectedTaal, handleFilterChange, user, onLoginClick, onRegisterClick, onLogoutClick }) {
   const [showHowTo, setShowHowTo] = useState(false);
 
   return (
@@ -38,6 +38,33 @@ export default function Header({ taals, selectedTaal, handleFilterChange }) {
         >
           How to Use
         </button>
+        {/* --- Auth Controls --- */}
+        {user ? (
+          <div className="flex items-center gap-2 ml-4">
+            <span className="text-neutral-700 text-sm">Logged in as <b>{user.username}</b></span>
+            <button
+              className="px-3 py-1 bg-neutral-900 text-white rounded-lg font-semibold hover:bg-neutral-800 transition border border-neutral-700 text-sm"
+              onClick={onLogoutClick}
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 ml-4">
+            <button
+              className="px-3 py-1 bg-neutral-900 text-white rounded-lg font-semibold hover:bg-neutral-800 transition border border-neutral-700 text-sm"
+              onClick={onLoginClick}
+            >
+              Login
+            </button>
+            <button
+              className="px-3 py-1 bg-white text-neutral-900 rounded-lg font-semibold hover:bg-neutral-100 transition border border-neutral-300 text-sm"
+              onClick={onRegisterClick}
+            >
+              Register
+            </button>
+          </div>
+        )}
       </div>
       {showHowTo && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-white rounded-2xl shadow-2xl border border-neutral-200 p-8 z-50 max-w-lg w-full text-left animate-fade-in">
@@ -51,7 +78,7 @@ export default function Header({ taals, selectedTaal, handleFilterChange }) {
             <li><b>Formatting:</b> Use Control (Mac) or Double Space (Windows) to automatically insert <code>"|"</code> in text fields. Sentences auto-capitalize.</li>
           </ul>
           <button
-            className="mt-6 px-4 py-2 bg-neutral-900 text-black rounded-lg font-semibold hover:bg-neutral-800 transition"
+            className="mt-6 px-4 py-2 bg-neutral-900 text-white rounded-lg font-semibold hover:bg-neutral-800 transition"
             onClick={() => setShowHowTo(false)}
           >
             Close

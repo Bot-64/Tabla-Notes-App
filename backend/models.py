@@ -13,7 +13,15 @@ def get_connection():
 def init_db():
     conn = get_connection()
     c = conn.cursor()
-    # Create the notes table if it doesn't exist
+    # Create the users table if it doesn't exist
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL
+        )
+    ''')
+    # Add user_id to notes table if not present
     c.execute('''
         CREATE TABLE IF NOT EXISTS notes (
             id SERIAL PRIMARY KEY,
@@ -21,7 +29,8 @@ def init_db():
             content TEXT NOT NULL,
             taal TEXT,
             structure TEXT,
-            date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            date_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
         )
     ''')
     conn.commit()
