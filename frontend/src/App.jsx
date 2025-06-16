@@ -165,13 +165,17 @@ export default function App() {
 
   // Handle editing a note
   const handleEditClick = (note) => {
-    setEditingNoteId(note.id);
-    setEditedNote(parseNote(note));
-    setShowNewNote(false); // Hide new note form while editing
-    // Move the editing note to the top
-    setFilteredNotes((prev) => [note, ...prev.filter((n) => n.id !== note.id)]);
-    setNotes((prev) => [note, ...prev.filter((n) => n.id !== note.id)]);
-  };
+  if (note.user_id == null) {
+    setError("You cannot edit notes without an associated user.");
+    return;
+  }
+  setEditingNoteId(note.id);
+  setEditedNote(parseNote(note));
+  setShowNewNote(false); // Hide new note form while editing
+  // Move the editing note to the top
+  setFilteredNotes((prev) => [note, ...prev.filter((n) => n.id !== note.id)]);
+  setNotes((prev) => [note, ...prev.filter((n) => n.id !== note.id)]);
+};
 
   // Handle input changes for the edited note
   const handleEditInputChange = (e) => {
