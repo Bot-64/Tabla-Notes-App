@@ -4,6 +4,8 @@ import NoteForm from "./components/NoteForm";
 import NoteList from "./components/NoteList";
 import Auth from "./components/Auth";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 // Helper: fetch with timeout
 function fetchWithTimeout(resource, options = {}, timeout = 40000) {
   const controller = new AbortController();
@@ -13,6 +15,12 @@ function fetchWithTimeout(resource, options = {}, timeout = 40000) {
 }
 
 export default function App() {
+  // Clear JWT on browser reload only
+  const navType = performance.getEntriesByType("navigation")[0]?.type;
+  if (navType === "reload") {
+    localStorage.removeItem("jwt");
+  }
+
   const [notes, setNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
   const [taals, setTaals] = useState([]);
@@ -79,9 +87,7 @@ export default function App() {
       setError("");
       setLoading(true);
       const fetchNotes = () => {
-        const url = token
-          ? "https://flask-backend-2tg6.onrender.com/notes" // Authenticated: should return only user's notes
-          : "https://flask-backend-2tg6.onrender.com/notes"; // Public: all notes (if allowed)
+        const url = `${BACKEND_URL}/notes`;
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         fetchWithTimeout(url, { headers })
           .then((response) => {
@@ -136,7 +142,7 @@ export default function App() {
   // Handle deleting a note
   const handleDeleteNote = (id) => {
     setError("");
-    fetchWithTimeout(`https://flask-backend-2tg6.onrender.com/notes/${id}`, {
+    fetchWithTimeout(`${BACKEND_URL}/notes/${id}`, {
       method: "DELETE",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
@@ -177,7 +183,7 @@ export default function App() {
   const handleSaveEdit = () => {
     setError("");
     const noteToSend = serializeNote(editedNote);
-    fetchWithTimeout(`https://flask-backend-2tg6.onrender.com/notes/${editingNoteId}`, {
+    fetchWithTimeout(`${BACKEND_URL}/notes/${editingNoteId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -218,7 +224,7 @@ export default function App() {
     e.preventDefault();
     setError("");
     const noteToSend = serializeNote(newNote);
-    fetchWithTimeout("https://flask-backend-2tg6.onrender.com/notes", {
+    fetchWithTimeout(`${BACKEND_URL}/notes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -298,39 +304,46 @@ export default function App() {
         onRegisterClick={() => { setAuthMode("register"); setShowAuthModal(true); }}
         onLogoutClick={handleLogout}
       />
-      <main className="grid grid-cols-4 gap-4 p-6 w-full h-full">
-        {user && showNewNote && !editingNoteId ? (
-          <NoteForm
-            newNote={newNote}
-            handleInputChange={handleInputChange}
-            handleFormSubmit={handleFormSubmit}
-            isEditing={false}
+      {!user && (
+        <div className="text-center mt-10 text-lg text-gray-700">
+          Please log in or register to access notes.
+        </div>
+      )}
+      {user && (
+        <main className="grid grid-cols-4 gap-4 p-6 w-full h-full">
+          {showNewNote && !editingNoteId ? (
+            <NoteForm
+              newNote={newNote}
+              handleInputChange={handleInputChange}
+              handleFormSubmit={handleFormSubmit}
+              isEditing={false}
+            />
+          ) : editingNoteId ? (
+            <NoteForm
+              newNote={editedNote}
+              handleInputChange={handleEditInputChange}
+              handleFormSubmit={(e) => {
+                e.preventDefault();
+                handleSaveEdit();
+              }}
+              isEditing={true}
+            />
+          ) : (
+            <div className="col-span-1" />
+          )}
+          <NoteList
+            filteredNotes={filteredNotes.filter((note) => note.id !== editingNoteId)}
+            editingNoteId={editingNoteId}
+            editedNote={editedNote}
+            handleEditClick={handleEditClick}
+            handleEditInputChange={handleEditInputChange}
+            handleSaveEdit={handleSaveEdit}
+            handleDeleteNote={handleDeleteNote}
+            setEditingNoteId={setEditingNoteId}
+            isReadOnly={false}
           />
-        ) : editingNoteId && user ? (
-          <NoteForm
-            newNote={editedNote}
-            handleInputChange={handleEditInputChange}
-            handleFormSubmit={(e) => {
-              e.preventDefault();
-              handleSaveEdit();
-            }}
-            isEditing={true}
-          />
-        ) : (
-          <div className="col-span-1" />
-        )}
-        <NoteList
-          filteredNotes={filteredNotes.filter((note) => note.id !== editingNoteId)}
-          editingNoteId={editingNoteId}
-          editedNote={editedNote}
-          handleEditClick={user ? handleEditClick : null}
-          handleEditInputChange={handleEditInputChange}
-          handleSaveEdit={handleSaveEdit}
-          handleDeleteNote={user ? handleDeleteNote : null}
-          setEditingNoteId={setEditingNoteId}
-          isReadOnly={!user}
-        />
-      </main>
+        </main>
+      )}
     </div>
   );
 }

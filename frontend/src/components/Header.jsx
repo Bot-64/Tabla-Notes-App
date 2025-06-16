@@ -78,7 +78,7 @@ export default function Header({ taals, selectedTaal, handleFilterChange, user, 
             <li><b>Formatting:</b> Use Control (Mac) or Double Space (Windows) to automatically insert <code>"|"</code> in text fields. Sentences auto-capitalize.</li>
           </ul>
           <button
-            className="mt-6 px-4 py-2 bg-neutral-900 text-white rounded-lg font-semibold hover:bg-neutral-800 transition"
+            className="mt-6 px-4 py-2 bg-neutral-900 text-black rounded-lg font-semibold hover:bg-neutral-800 transition"
             onClick={() => setShowHowTo(false)}
           >
             Close

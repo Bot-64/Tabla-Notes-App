@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Auth({
   show,
@@ -8,6 +8,10 @@ export default function Auth({
   initialMode = "login",
 }) {
   const [authMode, setAuthMode] = useState(mode || initialMode);
+  // Sync authMode with mode prop
+  useEffect(() => {
+    if (mode && mode !== authMode) setAuthMode(mode);
+  }, [mode]);
   const [authForm, setAuthForm] = useState({ username: "", password: "" });
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
@@ -25,25 +29,28 @@ export default function Auth({
     setAuthForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
   const handleAuthSubmit = (e) => {
     e.preventDefault();
     setAuthError("");
     setAuthLoading(true);
     const endpoint =
       authMode === "login"
-        ? "https://flask-backend-2tg6.onrender.com/login"
-        : "https://flask-backend-2tg6.onrender.com/register";
+        ? `${BACKEND_URL}/login`
+        : `${BACKEND_URL}/register`;
     fetchWithTimeout(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(authForm),
     })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.token) {
-          onAuthSuccess(data);
+      .then(async (res) => {
+        let data;
+        try { data = await res.json(); } catch { data = {}; }
+        if (res.ok && data && data.token) {
+          onAuthSuccess({ token: data.token, username: authForm.username });
         } else {
-          setAuthError(data.message || "Authentication failed");
+          setAuthError(data.error || data.message || (authMode === "login" ? "Invalid username or password" : "Registration failed"));
         }
       })
       .catch((err) => setAuthError(err.message))

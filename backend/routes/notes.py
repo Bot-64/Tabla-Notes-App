@@ -7,9 +7,15 @@ notes_bp = Blueprint("notes", __name__)
 
 @notes_bp.route("/notes", methods=["GET"])
 def get_notes():
+    user_id = get_user_id_from_token(request)
     conn = get_connection()
     c = conn.cursor()
-    c.execute("SELECT * FROM notes ORDER BY date_modified DESC")
+    if user_id:
+        # Authenticated: return this user's notes AND public notes (user_id IS NULL)
+        c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE user_id = %s OR user_id IS NULL ORDER BY date_modified DESC", (user_id,))
+    else:
+        # Not authenticated: return only public notes
+        c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE user_id IS NULL ORDER BY date_modified DESC")
     notes = [
         {
             "id": row[0],

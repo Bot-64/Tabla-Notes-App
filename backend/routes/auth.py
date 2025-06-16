@@ -53,7 +53,7 @@ def register():
     user_id = create_user(username, password)
     if user_id:
         token = create_access_token(user_id)
-        return jsonify({'token': token}), 201
+        return jsonify({'token': token, 'username': username}), 201
     else:
         return jsonify({'error': 'Username already exists'}), 409
 
@@ -65,7 +65,7 @@ def login():
     user_id = verify_user(username, password)
     if user_id:
         token = create_access_token(user_id)
-        return jsonify({'token': token}), 200
+        return jsonify({'token': token, 'username': username}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
