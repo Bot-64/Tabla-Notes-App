@@ -141,27 +141,33 @@ export default function App() {
 
   // Handle deleting a note
   const handleDeleteNote = (id) => {
-    setError("");
-    fetchWithTimeout(`${BACKEND_URL}/notes/${id}`, {
-      method: "DELETE",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+  const noteToDelete = notes.find((n) => n.id === id);
+  if (!noteToDelete || noteToDelete.user_id == null) {
+    setError("You cannot delete notes without an associated user.");
+    return;
+  }
+
+  setError("");
+  fetchWithTimeout(`${BACKEND_URL}/notes/${id}`, {
+    method: "DELETE",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+    .then((response) => {
+      if (response.ok) {
+        setNotes((prev) => prev.filter((note) => note.id !== id));
+        setFilteredNotes((prev) => prev.filter((note) => note.id !== id));
+      } else {
+        throw new Error("Failed to delete note");
+      }
     })
-      .then((response) => {
-        if (response.ok) {
-          setNotes((prev) => prev.filter((note) => note.id !== id));
-          setFilteredNotes((prev) => prev.filter((note) => note.id !== id));
-        } else {
-          throw new Error("Failed to delete note");
-        }
-      })
-      .catch((error) => {
-        if (error.name === "AbortError") {
-          setError("Delete request timed out. Please try again.");
-        } else {
-          setError("Error deleting note: " + error.message);
-        }
-      });
-  };
+    .catch((error) => {
+      if (error.name === "AbortError") {
+        setError("Delete request timed out. Please try again.");
+      } else {
+        setError("Error deleting note: " + error.message);
+      }
+    });
+};
 
   // Handle editing a note
   const handleEditClick = (note) => {
