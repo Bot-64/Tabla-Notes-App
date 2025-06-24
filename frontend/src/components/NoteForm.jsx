@@ -20,7 +20,7 @@ function capitalizeWords(text) {
 }
 
 // Helper: handle Control key or double space to insert ' | '
-function handleControlOrDoubleSpaceInsert(e, value, onChange) {
+function handlePreventDefault(e, value, onChange) {
   // Control key (for Mac)
   if (e.key === 'Control') {
     e.preventDefault();
@@ -39,6 +39,21 @@ function handleControlOrDoubleSpaceInsert(e, value, onChange) {
     onChange({ target: { name: e.target.name, value: newValue } });
     setTimeout(() => {
       e.target.selectionStart = e.target.selectionEnd = cursor + 2;
+    }, 0);
+  }
+  // Double enter
+  else if (
+    e.key === "Enter" &&
+    value[e.target.selectionStart - 1] === "\n"
+  ) {
+    e.preventDefault();
+    const cursor = e.target.selectionStart;
+    // Remove one \n before cursor (at cursor-2)
+    const newValue = value.slice(0, cursor - 1) + " °" + value.slice(cursor);
+    onChange({ target: { name: e.target.name, value: newValue } });
+    setTimeout(() => {
+      // Move cursor to after the inserted degree symbol
+      e.target.selectionStart = e.target.selectionEnd = cursor + 1;
     }, 0);
   }
 }
@@ -150,7 +165,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                   const value = capitalizeWords(e.target.value);
                   handleMainChange({ target: { name: "main", value } });
                 }}
-                onKeyDown={e => handleControlOrDoubleSpaceInsert(e, newNote.main || "", handleMainChange)}
+                onKeyDown={e => handlePreventDefault(e, newNote.main || "", handleMainChange)}
                 placeholder="Main"
                 className="p-2 rounded border mb-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required
@@ -165,7 +180,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                       const value = capitalizeWords(e.target.value);
                       handleBalChange(idx, { target: { name: `bal${idx}`, value } });
                     }}
-                    onKeyDown={e => handleControlOrDoubleSpaceInsert(e, bal, ev => handleBalChange(idx, ev))}
+                    onKeyDown={e => handlePreventDefault(e, bal, ev => handleBalChange(idx, ev))}
                     placeholder={`Bal ${idx + 1}`}
                     className="p-2 rounded border w-full h-24 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                   />
@@ -185,7 +200,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                   const value = capitalizeWords(e.target.value);
                   handleTehaiChange({ target: { name: "tehai", value } });
                 }}
-                onKeyDown={e => handleControlOrDoubleSpaceInsert(e, newNote.tehai || "", handleTehaiChange)}
+                onKeyDown={e => handlePreventDefault(e, newNote.tehai || "", handleTehaiChange)}
                 placeholder="Tehai"
                 className="p-2 rounded border mb-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required
@@ -215,7 +230,7 @@ export default function NoteForm({ newNote, handleInputChange, handleFormSubmit,
                   const value = capitalizeWords(e.target.value);
                   handleInputChange({ target: { name: "content", value } });
                 }}
-                onKeyDown={e => handleControlOrDoubleSpaceInsert(e, newNote.content, handleInputChange)}
+                onKeyDown={e => handlePreventDefault(e, newNote.content, handleInputChange)}
                 placeholder="Content"
                 className="p-2 rounded border col-span-2 focus:ring-2 focus:ring-neutral-800 transition-all bg-white text-neutral-900 border-neutral-300"
                 required

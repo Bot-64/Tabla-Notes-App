@@ -75,7 +75,7 @@ export default function Header({ taals, selectedTaal, handleFilterChange, user, 
             <li><b>Delete a Note:</b> Click <b>Delete</b> on a note card to remove it.</li>
             <li><b>Filter by Taal:</b> Use the <b>All Notes</b> dropdown to view notes for a specific taal.</li>
             <li><b>Split Structures:</b> For Kaida, Peshkar, or Rela, use Main, Bals, and Tehai fields. Add and delete Bals as needed.</li>
-            <li><b>Formatting:</b> Use Control (Mac) or Double Space (Windows) to automatically insert <code>"|"</code> in text fields. Sentences auto-capitalize.</li>
+            <li><b>Formatting:</b> Use Control (Mac) or Double Space (Windows) to automatically insert <code>"|"</code> in text fields. Use Double Enter to automatically insert "°". Sentences auto-capitalize.</li>
           </ul>
           <button
             className="mt-6 px-4 py-2 bg-neutral-900 text-black rounded-lg font-semibold hover:bg-neutral-800 transition"

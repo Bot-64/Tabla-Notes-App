@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 export default function NoteCard({
   note,
@@ -11,10 +12,24 @@ export default function NoteCard({
   setEditingNoteId,
   isReadOnly = false,
 }) {
+  // Color by structure
+  const structureColor = {
+    peshkar: "bg-[var(--color-note-peshkar)] border-blue-200",
+    kaida: "bg-[var(--color-note-kaida)] border-green-200",
+    rela: "bg-[var(--color-note-rela)] border-orange-200",
+    default: "bg-[var(--color-note-default)] border-neutral-200",
+  };
+  const cardColor = structureColor[note.structure] || structureColor.default;
+
   if (editingNoteId === note.id) {
     const isSplitStructure = ["peshkar", "kaida", "rela"].includes(editedNote.structure);
     return (
-      <div className="glassmorphic border border-white/20 shadow-xl rounded-2xl p-4 hover:shadow-2xl transition-all duration-300">
+      <motion.div
+        initial={{ scale: 0.97, opacity: 0.7 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.97, opacity: 0.7 }}
+        className={`glassmorphic border ${cardColor} shadow-xl rounded-2xl p-4 hover:shadow-2xl transition-all duration-300`}
+      >
         <h2 className="text-lg font-bold mb-4 text-neutral-900 drop-shadow-lg">Editing Note</h2>
         <input
           type="text"
@@ -148,68 +163,35 @@ export default function NoteCard({
             </button>
           </>
         )}
-      </div>
+      </motion.div>
     );
   }
 
   // View mode
   return (
-    <div className="glassmorphic card-bg rounded-2xl shadow-xl p-8 mb-4 border border-neutral-200 transition-all duration-300">
-      <h2 className="text-2xl font-bold text-neutral-900 mb-2 tracking-tight drop-shadow-sm">{note.title}</h2>
-      <div className="flex gap-6 mb-4 text-base text-neutral-800 font-medium">
-        <span><span className="font-semibold">Taal:</span> {note.taal}</span>
-        <span><span className="font-semibold">Structure:</span> {note.structure.charAt(0).toUpperCase() + note.structure.slice(1)}</span>
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 20, opacity: 0 }}
+      whileHover={{ scale: 1.03, boxShadow: "0 12px 36px 0 rgba(31,38,135,0.22)" }}
+      className={`glassmorphic border ${cardColor} shadow-xl rounded-2xl p-4 cursor-pointer transition-all duration-300`}
+      onClick={() => !isReadOnly && handleEditClick(note)}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="font-serif text-lg font-bold text-neutral-900 drop-shadow-lg">{note.title}</h2>
+        <div className="flex gap-2">
+          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--color-indigo)] text-white">{note.taal}</span>
+          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--color-saffron)] text-white">{note.structure}</span>
+        </div>
       </div>
-      <div className="bg-white/70 rounded-xl border border-neutral-200 p-4 mb-6 font-mono text-base whitespace-pre-wrap text-neutral-900 shadow-sm">
-        {note.main || note.content}
-        {Array.isArray(note.bals) && note.bals.length > 0 && (
-          <>
-            <br />
-            <span className="font-semibold">Bals:</span>
-            <ol className="list-decimal ml-6 mt-1">
-              {note.bals.map((bal, idx) => {
-                const lines = bal.split('\n');
-                return (
-                  <li key={idx} className="pl-0 list-inside whitespace-pre-line">
-                    {lines.map((line, i) => (
-                      <div key={i} style={i === 0 ? {} : { paddingLeft: '2em' }}>{line}</div>
-                    ))}
-                  </li>
-                );
-              })}
-            </ol>
-          </>
-        )}
-        {note.tehai && (
-          <>
-            <br />
-            <span className="font-semibold">Tehai:</span>
-            <br />
-            {note.tehai}
-          </>
-        )}
+      <div className="text-neutral-800 text-sm line-clamp-3 mb-2">
+        {note.content && note.content.length > 120 ? note.content.slice(0, 120) + "..." : note.content}
       </div>
-      <div className="flex items-center justify-between mt-2">
-        <span className="text-neutral-500 text-sm font-semibold">
-          Date Modified: {note.date_modified && new Date(note.date_modified).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-        </span>
+      <div className="flex gap-2 mt-2">
         {!isReadOnly && (
-          <div className="flex gap-2">
-            <button
-              className="border border-neutral-300 bg-white text-black px-6 py-2 rounded-lg font-semibold hover:bg-neutral-100 transition shadow-sm"
-              onClick={() => handleEditClick(note)}
-            >
-              Edit
-            </button>
-            <button
-              className="border border-neutral-300 bg-white text-neutral-700 px-6 py-2 rounded-lg font-semibold hover:bg-neutral-100 transition shadow-sm"
-              onClick={() => handleDeleteNote(note.id)}
-            >
-              Delete
-            </button>
-          </div>
+          <button className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200" onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }}>Delete</button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

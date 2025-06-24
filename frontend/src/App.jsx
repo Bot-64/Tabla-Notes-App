@@ -3,6 +3,7 @@ import Header from "./components/Header";
 import NoteForm from "./components/NoteForm";
 import NoteList from "./components/NoteList";
 import Auth from "./components/Auth";
+import Sidebar from "./components/Sidebar";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -279,81 +280,93 @@ export default function App() {
   };
 
   return (
-    <div className={
-      `min-h-screen w-screen h-screen transition-colors duration-300 ` +
-      'bg-neutral-100 text-neutral-900'
-    }>
-      {error && (
-        <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-lg border border-red-300 text-center">
-          {error}
-        </div>
-      )}
-      {loading && !error && (
-        <div className="bg-blue-100 text-blue-700 p-4 mb-4 rounded-lg border border-blue-300 text-center">
-          Loading notes...
-        </div>
-      )}
-      {/* --- Auth Modal (modular) --- */}
-      <Auth
-        show={showAuthModal}
-        mode={authMode}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={(data) => {
-          setToken(data.token);
-          setUser({ username: data.username });
-          setShowAuthModal(false);
-          // Notes will auto-refetch due to [token] dependency
-        }}
-      />
-      <Header
+    <div className="h-screen w-screen flex bg-neutral-100 text-neutral-900 transition-colors duration-300 overflow-hidden">
+      {/* Sidebar: Taal filter + user */}
+      <Sidebar
         taals={taals}
         selectedTaal={selectedTaal}
         handleFilterChange={handleFilterChange}
         user={user}
-        onLoginClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
-        onRegisterClick={() => { setAuthMode("register"); setShowAuthModal(true); }}
-        onLogoutClick={handleLogout}
       />
-      {!user && (
-        <div className="text-center mt-10 text-lg text-gray-700">
-          Please log in or register to access notes.
-        </div>
-      )}
-      {user && (
-        <main className="grid grid-cols-4 gap-4 p-6 w-full h-full">
-          {showNewNote && !editingNoteId ? (
-            <NoteForm
-              newNote={newNote}
-              handleInputChange={handleInputChange}
-              handleFormSubmit={handleFormSubmit}
-              isEditing={false}
+      {/* Main content area: flex-1 grid */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {error && (
+          <div className="bg-red-100 text-red-700 p-4 mb-4 rounded-lg border border-red-300 text-center">
+            {error}
+          </div>
+        )}
+        {loading && !error && (
+          <div className="bg-blue-100 text-blue-700 p-4 mb-4 rounded-lg border border-blue-300 text-center">
+            Loading notes...
+          </div>
+        )}
+        {/* --- Auth Modal (modular) --- */}
+        <Auth
+          show={showAuthModal}
+          mode={authMode}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={(data) => {
+            setToken(data.token);
+            setUser({ username: data.username });
+            setShowAuthModal(false);
+            // Notes will auto-refetch due to [token] dependency
+          }}
+        />
+        {/* Header moved inside main content for split layout */}
+        <Header
+          taals={taals}
+          selectedTaal={selectedTaal}
+          handleFilterChange={handleFilterChange}
+          user={user}
+          onLoginClick={() => { setAuthMode("login"); setShowAuthModal(true); }}
+          onRegisterClick={() => { setAuthMode("register"); setShowAuthModal(true); }}
+          onLogoutClick={handleLogout}
+        />
+        {!user && (
+          <div className="text-center mt-10 text-lg text-gray-700">
+            Please log in or register to access notes.
+          </div>
+        )}
+        {user && (
+          <main className="grid grid-cols-3 gap-6 p-6 w-full h-full flex-1">
+            {/* Left: (empty, reserved for future) */}
+            <div className="col-span-1 hidden md:block"/>
+            {/* Right: Note editor/form */}
+            {showNewNote && !editingNoteId ? (
+              <NoteForm
+                newNote={newNote}
+                handleInputChange={handleInputChange}
+                handleFormSubmit={handleFormSubmit}
+                isEditing={false}
+              />
+            ) : editingNoteId ? (
+              <NoteForm
+                newNote={editedNote}
+                handleInputChange={handleEditInputChange}
+                handleFormSubmit={(e) => {
+                  e.preventDefault();
+                  handleSaveEdit();
+                }}
+                isEditing={true}
+              />
+            ) : (
+              <div className="col-span-1" />
+            )}
+            {/* Bottom: Note list */}
+            <NoteList
+              filteredNotes={filteredNotes.filter((note) => note.id !== editingNoteId)}
+              editingNoteId={editingNoteId}
+              editedNote={editedNote}
+              handleEditClick={handleEditClick}
+              handleEditInputChange={handleEditInputChange}
+              handleSaveEdit={handleSaveEdit}
+              handleDeleteNote={handleDeleteNote}
+              setEditingNoteId={setEditingNoteId}
+              isReadOnly={false}
             />
-          ) : editingNoteId ? (
-            <NoteForm
-              newNote={editedNote}
-              handleInputChange={handleEditInputChange}
-              handleFormSubmit={(e) => {
-                e.preventDefault();
-                handleSaveEdit();
-              }}
-              isEditing={true}
-            />
-          ) : (
-            <div className="col-span-1" />
-          )}
-          <NoteList
-            filteredNotes={filteredNotes.filter((note) => note.id !== editingNoteId)}
-            editingNoteId={editingNoteId}
-            editedNote={editedNote}
-            handleEditClick={handleEditClick}
-            handleEditInputChange={handleEditInputChange}
-            handleSaveEdit={handleSaveEdit}
-            handleDeleteNote={handleDeleteNote}
-            setEditingNoteId={setEditingNoteId}
-            isReadOnly={false}
-          />
-        </main>
-      )}
+          </main>
+        )}
+      </div>
     </div>
   );
 }
