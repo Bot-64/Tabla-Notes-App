@@ -168,6 +168,25 @@ export default function NoteCard({
   }
 
   // View mode
+  const isUserNote = note.user_id !== null && note.user_id !== undefined;
+  const isSplitStructure = ["peshkar", "kaida", "rela"].includes(note.structure);
+  const handleCardClick = () => {
+    if (isReadOnly) return;
+    console.log('DEBUG note.user_id:', note); // Debug statement
+    if (note.user_id === null || note.user_id === undefined) {
+      alert("You cannot delete/edit notes without an associated user.");
+      return;
+    }
+    handleEditClick(note);
+  };
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (note.user_id === null || note.user_id === undefined) {
+      alert("You cannot delete/edit notes without an associated user.");
+      return;
+    }
+    handleDeleteNote(note.id);
+  };
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}
@@ -175,21 +194,62 @@ export default function NoteCard({
       exit={{ y: 20, opacity: 0 }}
       whileHover={{ scale: 1.03, boxShadow: "0 12px 36px 0 rgba(31,38,135,0.22)" }}
       className={`glassmorphic border ${cardColor} shadow-xl rounded-2xl p-4 cursor-pointer transition-all duration-300`}
-      onClick={() => !isReadOnly && handleEditClick(note)}
+      onClick={handleCardClick}
     >
       <div className="flex items-center justify-between mb-2">
         <h2 className="font-serif text-lg font-bold text-neutral-900 drop-shadow-lg">{note.title}</h2>
         <div className="flex gap-2">
           <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--color-indigo)] text-white">{note.taal}</span>
-          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--color-saffron)] text-white">{note.structure}</span>
+          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--color-saffron)] text-white">{note.structure.charAt(0).toUpperCase() + note.structure.slice(1)}</span>
         </div>
       </div>
-      <div className="text-neutral-800 text-sm line-clamp-3 mb-2">
-        {note.content && note.content.length > 120 ? note.content.slice(0, 120) + "..." : note.content}
+      <div className="text-neutral-800 text-base mb-2">
+        {isSplitStructure ? (
+          <div className="whitespace-pre-line">
+            {note.main && (
+              <div>
+                <span className="font-semibold">Main:</span>
+                <span className="block">{note.main}</span>
+              </div>
+            )}
+            {Array.isArray(note.bals) && note.bals.length > 0 && (
+              <div>
+                <span className="font-semibold">Bals:</span>
+                <ol className="list-decimal ml-6">
+                  {note.bals.map((bal, idx) => {
+                    // Split bal into lines
+                    const lines = bal.split(/\r?\n/);
+                    return (
+                      <li key={idx} className="block whitespace-pre-line">
+                        {/* First line with number, rest indented */}
+                        <span className="font-semibold mr-1">{idx + 1}.</span>
+                        {lines.map((line, lineIdx) => (
+                          <div key={lineIdx} className={lineIdx === 0 ? "inline" : "block ml-6"}>
+                            {line}
+                          </div>
+                        ))}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            )}
+            {note.tehai && (
+              <div>
+                <span className="font-semibold">Tehai:</span>
+                <span className="block">{note.tehai}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="line-clamp-3 whitespace-pre-line">
+            {note.content}
+          </div>
+        )}
       </div>
       <div className="flex gap-2 mt-2">
-        {!isReadOnly && (
-          <button className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200" onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }}>Delete</button>
+        {isUserNote && !isReadOnly && (
+          <button className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200" onClick={handleDelete}>Delete</button>
         )}
       </div>
     </motion.div>

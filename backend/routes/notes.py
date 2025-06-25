@@ -12,10 +12,10 @@ def get_notes():
     c = conn.cursor()
     if user_id:
         # Authenticated: return this user's notes AND public notes (user_id IS NULL)
-        c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE user_id = %s OR user_id IS NULL ORDER BY date_modified DESC", (user_id,))
+        c.execute("SELECT id, title, content, taal, structure, date_modified, user_id FROM notes WHERE user_id = %s OR user_id IS NULL ORDER BY date_modified DESC", (user_id,))
     else:
         # Not authenticated: return only public notes
-        c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE user_id IS NULL ORDER BY date_modified DESC")
+        c.execute("SELECT id, title, content, taal, structure, date_modified, user_id FROM notes WHERE user_id IS NULL ORDER BY date_modified DESC")
     notes = [
         {
             "id": row[0],
@@ -24,6 +24,7 @@ def get_notes():
             "taal": row[3],
             "structure": row[4],
             "date_modified": row[5],
+            "user_id": row[6],
         }
         for row in c.fetchall()
     ]
@@ -46,7 +47,7 @@ def add_note():
         )
         note_id = c.fetchone()[0]
         conn.commit()
-        c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE id = %s", (note_id,))
+        c.execute("SELECT id, title, content, taal, structure, date_modified, user_id FROM notes WHERE id = %s", (note_id,))
         row = c.fetchone()
         if row:
             note = {
@@ -56,6 +57,7 @@ def add_note():
                 "taal": row[3],
                 "structure": row[4],
                 "date_modified": row[5],
+                "user_id": row[6],
             }
             return jsonify(note), 201
         else:
@@ -95,7 +97,7 @@ def update_note(id):
         (data["title"], data["content"], data["taal"], data["structure"], id, user_id)
     )
     conn.commit()
-    c.execute("SELECT id, title, content, taal, structure, date_modified FROM notes WHERE id = %s", (id,))
+    c.execute("SELECT id, title, content, taal, structure, date_modified, user_id FROM notes WHERE id = %s", (id,))
     row = c.fetchone()
     c.close()
     conn.close()
@@ -107,6 +109,7 @@ def update_note(id):
             "taal": row[3],
             "structure": row[4],
             "date_modified": row[5],
+            "user_id": row[6],
         }
         return jsonify(note), 200
     else:
